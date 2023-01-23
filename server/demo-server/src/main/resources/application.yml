@@ -5,10 +5,10 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER}
-          jwk-set-uri: http://keycloak:8080/auth/realms/example/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8083/auth/realms/pleiade
+          jwk-set-uri: http://localhost:8083/auth/realms/pleiade/protocol/openid-connect/certs
 server:
-  port: 80
+  port: 8081
   error:
     include-stacktrace: ALWAYS
 

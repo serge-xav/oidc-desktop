@@ -2,3 +2,4 @@
 /dbFolder
 */.gradle
 **/build
+/.idea/
