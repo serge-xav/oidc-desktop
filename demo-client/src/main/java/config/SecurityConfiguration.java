@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.client.endpoint.OAuth2RefreshTokenGra
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import security.AuthenticationProvider;
@@ -106,8 +107,21 @@ public class SecurityConfiguration {
 	@Bean
 	public ClientRegistrationRepository clientRegistrationRepository(OAuth2ClientProperties properties) {
 		List<ClientRegistration> registrations = new ArrayList<>(
-				OAuth2ClientPropertiesRegistrationAdapter.getClientRegistrations(properties).values());
+				);
+		registrations.add(getRegistration());
 		return new InMemoryClientRegistrationRepository(registrations);
+	}
+
+
+	private ClientRegistration getRegistration() {
+
+		return ClientRegistration.withRegistrationId(AUTHSERVICE_REGISTRATION_ID)
+		                         .tokenUri("url")
+		                         .clientId("clientid")
+		                         .clientSecret("clientSecret")
+		                         .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+		                         .build();
+
 	}
 
 	private class RefreshTokenTokenResponseClient implements OAuth2AccessTokenResponseClient<OAuth2RefreshTokenGrantRequest> {
