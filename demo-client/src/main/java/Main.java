@@ -32,14 +32,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class Main{
-
+    static JFrame frame = new JFrame("OIDC Demo");
     ConfigurableApplicationContext context;
 
     public static void main(String[] args) throws InterruptedException {
         Main application = new Main(args);
         application.login();
-        String message = application.callHello();
-        application.displayMessage(message);
+        for (int i=1; i<15; i++){
+            String message = application.callHello();
+            application.displayMessage(message, i);
+            Thread.sleep(60000);
+            frame.setVisible(false);
+        }
     }
 
     public Main(String[] args) {
@@ -152,18 +156,21 @@ public class Main{
 
 
 
-    private static void displayMessage(String message) {
+    private static void displayMessage(String message, int order) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("OIDC Demo");
+
             frame.setMinimumSize(new Dimension(800, 400));
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-            JLabel myLabel = new JLabel(message, SwingConstants.CENTER);
+            JLabel myLabel = new JLabel(message + " "+ order, SwingConstants.CENTER);
             myLabel.setFont(new Font("Serif", Font.BOLD, 22));
-            myLabel.setBackground(Color.gray);
+            int red = (int) (Math.random() * 256);
+            int green = (int) (Math.random() * 256);
+            int blue = (int) (Math.random() * 256);
+            myLabel.setBackground(new Color(red, green, blue));
             myLabel.setOpaque(true);
             myLabel.setPreferredSize(new Dimension(100, 80));
-
+            frame.getContentPane().removeAll();
             frame.getContentPane().add(myLabel, BorderLayout.NORTH);
             frame.setVisible(true);
         });

@@ -5,8 +5,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8083/auth/realms/pleiade
-          jwk-set-uri: http://localhost:8083/auth/realms/pleiade/protocol/openid-connect/certs
+          issuer-uri: https://dev-06128998.okta.com/oauth2/aus7unshngqfk7HA85d7
 server:
   port: 8081
   error:

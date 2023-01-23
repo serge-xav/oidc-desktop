@@ -12,6 +12,6 @@ public class HelloWorldController {
 
     @GetMapping("/hello")
     public String hello(@AuthenticationPrincipal Jwt principal) {
-        return "Hello World " + principal.getClaim("preferred_username") + "!!!";
+        return "Hello World " + principal.getClaim("sub") + "!!!";
     }
 }

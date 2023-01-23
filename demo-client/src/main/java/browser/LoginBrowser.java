@@ -1,8 +1,10 @@
 package browser;
 
 import com.nimbusds.oauth2.sdk.*;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
+import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
+import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.*;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
@@ -36,9 +38,6 @@ public class LoginBrowser {
     private String redirectURI = "https://www.acuity-solutions.fr";
 
     Consumer<OIDCTokenResponse> authenticationHandler;
-
-
-
 
     private Browser browser;
 
@@ -179,13 +178,17 @@ public class LoginBrowser {
         // The credentials to authenticate the client at the token endpoint
         ClientID clientID = new ClientID(client);
 
+        Secret clientSecret = new Secret("PAHWZLiS-86s233cYtn_ravpi6uMNOvkDxMeXNow");
+        ClientAuthentication clientAuth = new ClientSecretBasic(clientID, clientSecret);
+
         // The token endpoint
 
         URI tokenEndpoint = opMetadata.getTokenEndpointURI();
 
         try {
         // Make the token request
-        TokenRequest request = new TokenRequest(tokenEndpoint, clientID, codeGrant);
+        TokenRequest request = new TokenRequest(tokenEndpoint, clientAuth, codeGrant);
+
 
         TokenResponse tokenResponse = OIDCTokenResponseParser.parse(request.toHTTPRequest().send());
 
