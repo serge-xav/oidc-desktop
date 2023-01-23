@@ -23,7 +23,6 @@ Making a back-channel logout when the application closes isn't hard, but depends
 2. Unzip the dbFolder.zip
 3. At server/demo-compose change the device from postgres_data volume to the unzipped dbFolder path
 4. docker-compose up. Will use ports
-   1. 80 for the Login pages, 
    2. 8080 for Keycloak
    3. 8081 for Demo Server
 
@@ -47,16 +46,13 @@ Making a back-channel logout when the application closes isn't hard, but depends
 ## Demo-client 
 	Contains the Swing application that performs the login and calls the server.
 	Uses a jxBrowser to run the Authorization Code flow with the IdP.
-	Uses the web pages from the loginPage container to extract the tokens to Java.
+	Uses redirect interception to extract the tokens in Java, via Nimbus library
 
 ## Demo-server
 	This project contains the Resource Server of an hello world which replies with the "preferred_username" claim from the request.
 	
-## loginPage
-	This project builds a NGINX-based webserver serving the login and redirect webpages. These interact with OIDC redirects and the Demo-client will use them from the jxBrowser
-	
 ## demo-compose
-	Example compose file to launch the server
+	Example compose file to launch the server (removal of origin login page / keycloak implementation)
 	
 ## Keycloak
 	The dump on this repository will use an admin / admin master user.
