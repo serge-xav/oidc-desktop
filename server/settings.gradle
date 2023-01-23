@@ -1,4 +1,3 @@
 rootProject.name = 'server'
 
 include ":demo-server"
-include ":loginPage"

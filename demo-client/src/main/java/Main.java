@@ -1,4 +1,12 @@
 import browser.LoginBrowser;
+import com.nimbusds.oauth2.sdk.ResponseType;
+import com.nimbusds.oauth2.sdk.Scope;
+import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.State;
+import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
+import com.teamdev.jxbrowser.navigation.LoadUrlParams;
 import config.AppContext;
 import org.springframework.boot.Banner;
 import org.springframework.boot.WebApplicationType;
@@ -15,6 +23,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.SecureRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -55,9 +67,14 @@ public class Main{
         String realm = env.getProperty("example.keycloak.realm");
         String client = env.getProperty("example.keycloak.client");
 
-        LoginBrowser browser = new LoginBrowser(issuerUrl, realm, client,
-                (tokenEndpointResponse, userInfoResponse) -> {
-                    handleAuthentication(tokenEndpointResponse, userInfoResponse);
+        // Generate random state string to securely pair the callback to this request
+        State state = new State();
+
+        String redirectURI = "https://www.acuity-solutions.fr";
+
+        LoginBrowser browser = new LoginBrowser(issuerUrl, client, state,
+                (tokenEndpointResponse) -> {
+                    handleAuthentication(tokenEndpointResponse);
 
                     SwingUtilities.invokeLater(() -> {
                         frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
@@ -75,8 +92,38 @@ public class Main{
             }
         });
 
+        ClientID clientID = new ClientID(client);
+
+        // The client callback URL
+        URI callback = null;
+        try {
+            callback = new URI(redirectURI);
+
+
+        // Generate nonce for the ID token
+        Nonce nonce = new Nonce();
+
+        // Compose the OpenID authentication request (for the code flow)
+        AuthenticationRequest request = new AuthenticationRequest.Builder(
+                new ResponseType("code"),
+                new Scope("openid"),
+                clientID,
+                callback)
+                .endpointURI(new URI(issuerUrl + "/auth/realms/"+ realm + "/protocol/openid-connect/auth"))
+                .state(state)
+                .nonce(nonce)
+                .build();
+
+
+
+        browser.loadUrl(request.toURI().toString());
+
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
         // Loading the required web page
-        browser.loadUrl(env.getProperty("example.loginPage"));
+//        browser.loadUrl(env.getProperty("example.loginPage"));
 
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.add(browser.getView(), BorderLayout.CENTER);
@@ -110,11 +157,11 @@ public class Main{
         });
     }
 
-    private void handleAuthentication(String theTokenEndpointResponse, String theUserInfoResponse) {
+    private void handleAuthentication(OIDCTokenResponse theTokenEndpointResponse) {
 
         // 1. This assumes that SecurityContext is already configured for GLOBAL mode
         var aAuthenticationProvider = context.getBean(AuthenticationProvider.class);
-        var aAuthentication = aAuthenticationProvider.registerAuthentication(theTokenEndpointResponse, theUserInfoResponse);
+        var aAuthentication = aAuthenticationProvider.registerAuthentication(theTokenEndpointResponse);
 
         DesktopOAuth2LoginAuthenticationToken aDesktopAuthentication = (DesktopOAuth2LoginAuthenticationToken) aAuthentication;
         OidcUser principal = aDesktopAuthentication.getPrincipal();

@@ -31,34 +31,8 @@ public class AuthenticationProviderImpl implements AuthenticationProvider {
 	}
 
 	@Override
-	public Authentication registerAuthentication(String theTokenEndpointResponse, String theUserInfoResponse) {
-		ObjectMapper objMapper = new ObjectMapper();
+	public Authentication registerAuthentication(OIDCTokenResponse parsedOidcToken) {
 
-		TypeReference<Map<String, Object>> type = new TypeReference<Map<String, Object>>() {//
-		};
-
-		Map<String, Object> jsonMap = null;
-		try {
-			jsonMap = objMapper.readValue(theTokenEndpointResponse, type);
-		}
-		catch (JsonProcessingException theJsonProcessingException) {
-			throw new RuntimeException("The json from the authorization code flow is in incorrect format", theJsonProcessingException);
-		}
-
-		OIDCTokenResponse parsedOidcToken = null;
-		try {
-			var tokenResponse = OIDCTokenResponseParser.parse(new JSONObject(jsonMap));
-			if (tokenResponse.indicatesSuccess()) {
-				parsedOidcToken = (OIDCTokenResponse) tokenResponse;
-			}
-			else {
-				//This (and other parse exceptions) should not happen since the success is validated on the login browser integration
-				throw new RuntimeException("Authorization code flow response indicates insuccess");
-			}
-		}
-		catch (ParseException theParseException) {
-			throw new RuntimeException("Error parsing the json from the authorization code flow", theParseException);
-		}
 
 		OAuth2AccessTokenResponse accessTokenResponse = oauth2AccessTokenResponse(parsedOidcToken);
 

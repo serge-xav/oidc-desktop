@@ -7,7 +7,3 @@ services:
       - 8081:80
     environment:
       KEYCLOAK_ISSUER: http://localhost:8083/auth/realms/pleiade
-  login:
-    image: localhost/oidc-desktop/login:latest
-    ports:
-      - 80:80

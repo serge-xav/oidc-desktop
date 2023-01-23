@@ -24,7 +24,6 @@
           <set>
             <option value="$PROJECT_DIR$/server" />
             <option value="$PROJECT_DIR$/server/demo-server" />
-            <option value="$PROJECT_DIR$/server/loginPage" />
           </set>
         </option>
       </GradleProjectSettings>
