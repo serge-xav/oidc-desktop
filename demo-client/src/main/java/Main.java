@@ -1,12 +1,14 @@
 import browser.LoginBrowser;
+import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
-import com.teamdev.jxbrowser.navigation.LoadUrlParams;
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import config.AppContext;
 import org.springframework.boot.Banner;
 import org.springframework.boot.WebApplicationType;
@@ -23,10 +25,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.math.BigInteger;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.SecureRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -63,16 +64,29 @@ public class Main{
 
         System.setProperty("jxbrowser.license.key", env.getProperty("example.jxbrowser"));
 
-        String issuerUrl = env.getProperty("example.keycloak.issuerUrl");
-        String realm = env.getProperty("example.keycloak.realm");
-        String client = env.getProperty("example.keycloak.client");
+        String issuerUrl = env.getProperty("example.authserver.issuerUrl");
+        String client = env.getProperty("example.authserver.client");
 
         // Generate random state string to securely pair the callback to this request
         State state = new State();
 
         String redirectURI = "https://www.acuity-solutions.fr";
 
-        LoginBrowser browser = new LoginBrowser(issuerUrl, client, state,
+        // The OpenID provider issuer URL
+        Issuer issuer = new Issuer(issuerUrl);
+
+        // Will resolve the OpenID provider metadata automatically
+        OIDCProviderMetadata opMetadata = null;
+        try {
+            opMetadata = OIDCProviderMetadata.resolve(issuer);
+        } catch (GeneralException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        LoginBrowser browser = new LoginBrowser( opMetadata, client, state,
                 (tokenEndpointResponse) -> {
                     handleAuthentication(tokenEndpointResponse);
 
@@ -109,12 +123,10 @@ public class Main{
                 new Scope("openid"),
                 clientID,
                 callback)
-                .endpointURI(new URI(issuerUrl + "/auth/realms/"+ realm + "/protocol/openid-connect/auth"))
+                .endpointURI(opMetadata.getAuthorizationEndpointURI())
                 .state(state)
                 .nonce(nonce)
                 .build();
-
-
 
         browser.loadUrl(request.toURI().toString());
 

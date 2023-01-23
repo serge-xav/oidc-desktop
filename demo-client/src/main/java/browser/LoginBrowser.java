@@ -2,8 +2,10 @@ package browser;
 
 import com.nimbusds.oauth2.sdk.*;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.*;
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.teamdev.jxbrowser.browser.Browser;
 import com.teamdev.jxbrowser.browser.event.ConsoleMessageReceived;
 import com.teamdev.jxbrowser.engine.Engine;
@@ -26,7 +28,7 @@ import static com.teamdev.jxbrowser.engine.RenderingMode.HARDWARE_ACCELERATED;
 
 public class LoginBrowser {
 
-    private String issuerUrl;
+    private OIDCProviderMetadata opMetadata;
     private String client;
 
     State state;
@@ -40,8 +42,8 @@ public class LoginBrowser {
 
     private Browser browser;
 
-    public LoginBrowser (String issuerUrl, String client, State state, Consumer<OIDCTokenResponse> authenticationHandler) {
-        this.issuerUrl = issuerUrl;
+    public LoginBrowser (OIDCProviderMetadata opMetadata, String client, State state, Consumer<OIDCTokenResponse> authenticationHandler) {
+        this.opMetadata = opMetadata;
         this.client = client;
         this.authenticationHandler = authenticationHandler;
         this.state = state;
@@ -70,7 +72,7 @@ public class LoginBrowser {
                           }
             if(matchesRedirection(this.redirectURI, url2)) {
                               System.out.println("Redirection occured well");
-                              modifyOAuth2ClientSpringSetup(uri);
+                              handleTokensRetrieval(uri);
                               navigation.stop();
                           }
                       });
@@ -124,7 +126,7 @@ public class LoginBrowser {
         return true;
     }
 
-    void modifyOAuth2ClientSpringSetup(URI url2) {
+    void handleTokensRetrieval(URI url2) {
         try {
 
             AuthenticationResponse response = AuthenticationResponseParser.parse(url2);
@@ -179,10 +181,9 @@ public class LoginBrowser {
 
         // The token endpoint
 
-        URI tokenEndpoint = null;
-        try {
-            tokenEndpoint = new URI("http://localhost:8083/auth/realms/pleiade/protocol/openid-connect/token");
+        URI tokenEndpoint = opMetadata.getTokenEndpointURI();
 
+        try {
         // Make the token request
         TokenRequest request = new TokenRequest(tokenEndpoint, clientID, codeGrant);
 
@@ -196,9 +197,9 @@ public class LoginBrowser {
         OIDCTokenResponse successResponse = (OIDCTokenResponse)tokenResponse.toSuccessResponse();
 
 
-            authenticationHandler.accept(successResponse);
+        authenticationHandler.accept(successResponse);
 
-        } catch (URISyntaxException | IOException | ParseException e) {
+        } catch (IOException | ParseException e) {
             throw new RuntimeException(e);
         }
 
